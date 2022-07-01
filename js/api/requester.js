@@ -102,7 +102,7 @@ export async function login(email, password) {
 		email: result.data.email,
 		firstName: result.data.firstName,
 		lastName: result.data.lastName,
-		age: Number(result.data.age),
+		age: Number(result.data.age)
 	};
 
 	saveUserData(userData);
@@ -114,15 +114,18 @@ export async function login(email, password) {
  * Register request
  * @param  {String} email
  * @param  {String} password
+ * @param  {String} confirmPassword
+ * @param  {String} firstName
+ * @param  {String} lastName
+ * @param  {Number} age
  */
-export async function register(email, password) {
-	const result = await post(registerUrl, { email, password });
+export async function register(email, password, confirmPassword, firstName, lastName, age) {
+	const result = await post(registerUrl, { email, password, confirmPassword, firstName, lastName, age });
 	const userData = {
-		id: result._id,
-		email: result.email,
-		username: result.username,
-		gender: result.gender,
-		token: result.accessToken
+		email: result.data.email,
+		firstName: result.data.firstName,
+		lastName: result.data.lastName,
+		age: Number(result.data.age)
 	};
 
 	saveUserData(userData);
