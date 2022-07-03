@@ -1,6 +1,7 @@
 import { render } from './util/lib.js';
 import { updateUserNav } from './views/nav.js';
 import * as router from './router.js';
+import './util/helpers.js';
 
 
 const root = document.querySelector('.main-content');

@@ -1,4 +1,5 @@
 import { removeUserData, hasUserData, getUserData, saveUserData } from '../util/storage.js';
+import { AuthenticationError } from '../error/AuthenticationError.js';
 
 
 const host = 'http://localhost:3000';
@@ -18,6 +19,7 @@ async function performRequest(url, options) {
 			// To prevent soft lock
 			if (res.status === 403) {
 				removeUserData();
+				throw new AuthenticationError();
 			}
 
 			const error = await res.json();
@@ -44,16 +46,14 @@ async function performRequest(url, options) {
 function createOptions(method, data) {
 	const options = {
 		method,
-		headers: {}
+		headers: {},
+		credentials: 'include'
 	};
 
 	if (data !== undefined) {
 		options.headers['Content-Type'] = 'application/json';
+		options.headers['Access-Control-Allow-Credentials'] = true;
 		options.body = JSON.stringify(data);
-	}
-
-	if (hasUserData()) {
-		options.headers['X-Authorization'] = getUserData().token;
 	}
 
 	return options;
