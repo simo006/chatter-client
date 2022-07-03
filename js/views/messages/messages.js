@@ -6,10 +6,10 @@ import { showError } from '../../util/show-message.js';
 import { AuthenticationError} from '../../error/AuthenticationError.js';
 
 
-const messagesTemplate = (chats, onChatClick, activeChat) => {
+const messagesTemplate = (chats, onChatClick, activeChat, onChatSend) => {
     let chatLabels = '';
     if (chats.length > 0) {
-        chatLabels = chats.map(c => chatLabelTemplate(c, onChatClick));
+        chatLabels = chats.map(c => chatLabelTemplate(c, onChatClick, activeChat['id']));
     }
 
     let chatInfoView = html`
@@ -18,12 +18,12 @@ const messagesTemplate = (chats, onChatClick, activeChat) => {
     </div>`;
 
     if (activeChat) {
-        chatInfoView = chatInfoTemplate(activeChat);
+        chatInfoView = chatInfoTemplate(activeChat, onChatSend);
     }
 
     return html`
-    <section class="messages-page height-100 container">
-        <div class="row height-100">
+    <section class="messages-page container">
+        <div class="row">
             <div class="col-4">
                 <div class="card border-0 floating-sidebar">
                     <div class="card-body">
@@ -35,7 +35,7 @@ const messagesTemplate = (chats, onChatClick, activeChat) => {
                 </div>
             </div>
             <div class="col-8">
-                <div class="card border-0 floating-sidebar height-100">
+                <div class="card border-0 floating-sidebar">
                     ${chatInfoView}
                 </div>
             </div>
@@ -54,7 +54,7 @@ export async function messagesPage(context) {
         if (context.params && Number(context.params['chatId']) > 0) {
             const activeChat = await getChat(Number(context.params['chatId']));
 
-            context.render(messagesTemplate(chats['data'], onChatClick, activeChat['data']));
+            context.render(messagesTemplate(chats['data'], onChatClick, activeChat['data'], onChatSend));
         } else {
             context.render(messagesTemplate(chats['data'], onChatClick));
         }
@@ -75,6 +75,15 @@ export async function messagesPage(context) {
             button = button.parentElement;
         }
 
+        Array.from(button.parentElement.children).forEach(e => e.classList.remove('active')); 
+        button.classList.add('active');
+
         context.page.redirect('/messages/' + button.dataset.chatId);
+    }
+
+    async function onChatSend(event) {
+        event.preventDefault();
+
+
     }
 }

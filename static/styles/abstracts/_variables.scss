@@ -11,6 +11,8 @@ $mid-grey: rgb(153, 153, 153);
 $dark-grey: rgb(68, 68, 68);
 $background-color: rgba(228, 245, 253, 0.626);
 $box-shadow-container: rgba(100, 100, 111, 0.2) 0px 7px 29px 0px;
+$box-shadow-container-sm: rgba(100, 100, 111, 0.15) 0px 7px 15px 0px;
+
 $active-color: rgb(222, 238, 88);
 $text-color-white: rgb(237, 237, 237);
 
@@ -18,6 +20,9 @@ $container-radius: 15px;
 $container-background: rgb(255, 255, 255);
 $container-max-width: 1180px;
 $container-padding: 20px;
+
+$message-bubble-background: rgba(153, 153, 153, 0.045);
+$my-message-bubble-background: rgba(228, 245, 253, 0.626);
 
 $breakpoints: (
     'small': 320px,

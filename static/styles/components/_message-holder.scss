@@ -1,0 +1,20 @@
+.message-holder {
+    overflow: auto;
+    flex-grow: 1;
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+
+    .message-bubble {
+        border-radius: $container-radius;
+        background-color: $message-bubble-background;
+        box-shadow: $box-shadow-container-sm;
+        align-self: flex-end;
+        flex-shrink: 0;
+    
+        &.my-bubble {
+            background-color: $my-message-bubble-background;
+            align-self: flex-start;
+        }
+    }
+}
