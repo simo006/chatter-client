@@ -1,9 +1,6 @@
-.floating-form {
-    width: 100%;
-    max-width: 400px; 
-    margin: 20px auto;
-    padding: $container-padding;
+.floating-sidebar {
     border-radius: $container-radius;
     background-color: $container-background;
     box-shadow: $box-shadow-container;
+    overflow: hidden;
 }

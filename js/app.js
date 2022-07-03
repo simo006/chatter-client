@@ -11,8 +11,8 @@ const context = {
     updateUserNav
 };
 
-updateUserNav(context, 'home');
-
 router.decorateContext(context);
 router.loadRoutes();
 router.start();
+
+updateUserNav(context, 'home');

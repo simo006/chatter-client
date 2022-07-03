@@ -12,7 +12,7 @@ const headerTemplate = (isLogged, activePage, onLogout) => {
     if (isLogged) {
         messagesButton = html`
         <li>
-            <a href="/messages" class="nav-link ${activePage === 'messages' ? 'text-secondary' : 'text-white'}">
+            <a href="/messages" class="nav-link ${activePage === 'messages' ? 'active' : ''}">
                 <span class="d-block mx-auto mb-1 text-center">
                     <i class="fa-solid fa-message fa-lg"></i>
                 </span>
@@ -22,7 +22,7 @@ const headerTemplate = (isLogged, activePage, onLogout) => {
 
         logoutButton = html`
         <li>
-            <a @click=${onLogout} href="/logout" class="nav-link text-white">
+            <a @click=${onLogout} href="/logout" class="nav-link">
                 <span class="d-block mx-auto mb-1 text-center">
                     <i class="fa-solid fa-arrow-right-to-bracket fa-lg"></i>
                 </span>
@@ -32,7 +32,7 @@ const headerTemplate = (isLogged, activePage, onLogout) => {
     } else {
         loginButton = html`
         <li>
-            <a href="/login" class="nav-link ${activePage === 'login' ? 'text-secondary' : 'text-white'}">
+            <a href="/login" class="nav-link ${activePage === 'login' ? 'active' : ''}">
                 <span class="d-block mx-auto mb-1 text-center">
                     <i class="fa-solid fa-arrow-right-to-bracket fa-lg"></i>
                 </span>
@@ -42,7 +42,7 @@ const headerTemplate = (isLogged, activePage, onLogout) => {
 
         registerButton = html`
         <li>
-            <a href="/register" class="nav-link ${activePage === 'register' ? 'text-secondary' : 'text-white'}">
+            <a href="/register" class="nav-link ${activePage === 'register' ? 'active' : ''}">
                 <span class="d-block mx-auto mb-1 text-center">
                     <i class="fa-solid fa-plus fa-lg"></i>
                 </span>
@@ -63,7 +63,7 @@ const headerTemplate = (isLogged, activePage, onLogout) => {
     
                 <ul class="nav col-12 col-lg-auto my-2 justify-content-center my-md-0 text-small">
                     <li>
-                        <a href="/home" class="nav-link ${activePage === 'home' ? 'text-secondary' : 'text-white'}">
+                        <a href="/home" class="nav-link ${activePage === 'home' ? 'active' : ''}">
                             <span class="d-block mx-auto mb-1 text-center">
                                 <i class="fa-solid fa-house fa-lg"></i>
                             </span>
@@ -75,7 +75,7 @@ const headerTemplate = (isLogged, activePage, onLogout) => {
                     ${registerButton}
                     ${logoutButton}
                     <li>
-                        <a href="/about" class="nav-link ${activePage === 'about' ? 'text-secondary' : 'text-white'}">
+                        <a href="/about" class="nav-link ${activePage === 'about' ? 'active' : ''}">
                             <span class="d-block mx-auto mb-1 text-center">
                                 <i class="fa-solid fa-info fa-lg"></i>
                             </span>
@@ -101,6 +101,6 @@ export function updateUserNav(context, activePage) {
         logout();
 
         context.updateUserNav(context);
-        context.page.redirect('/');
+        context.page.redirect('/home');
     }
 }

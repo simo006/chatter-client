@@ -1,3 +1,13 @@
 // -----------------------------------------------------------------------------
 // This file contains all styles related to the footer of the site/application.
 // -----------------------------------------------------------------------------
+
+.footer {
+    padding: 10px;
+    flex-shrink: 0;
+
+    p {
+        text-align: center;
+        margin-bottom: 0;
+    }
+}
