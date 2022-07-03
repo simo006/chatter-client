@@ -6,7 +6,7 @@ import { showError } from '../../util/show-message.js';
 import { AuthenticationError} from '../../error/AuthenticationError.js';
 
 
-const messagesTemplate = (chats, onChatClick, activeChat, onChatSend) => {
+const messagesTemplate = (chats, onChatClick, activeChat, isUserActive, onChatSend) => {
     let chatLabels = '';
     if (chats.length > 0) {
         chatLabels = chats.map(c => chatLabelTemplate(c, onChatClick, activeChat['id']));
@@ -18,7 +18,7 @@ const messagesTemplate = (chats, onChatClick, activeChat, onChatSend) => {
     </div>`;
 
     if (activeChat) {
-        chatInfoView = chatInfoTemplate(activeChat, onChatSend);
+        chatInfoView = chatInfoTemplate(activeChat, isUserActive, onChatSend);
     }
 
     return html`
@@ -54,7 +54,7 @@ export async function messagesPage(context) {
         if (context.params && Number(context.params['chatId']) > 0) {
             const activeChat = await getChat(Number(context.params['chatId']));
 
-            context.render(messagesTemplate(chats['data'], onChatClick, activeChat['data'], onChatSend));
+            context.render(messagesTemplate(chats['data'], onChatClick, activeChat['data'], false, onChatSend));
         } else {
             context.render(messagesTemplate(chats['data'], onChatClick));
         }
