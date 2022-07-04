@@ -1,6 +1,7 @@
 import { hasUserData } from '../util/storage.js';
 import { logout } from '../api/data.js';
 import { html } from '../util/lib.js';
+import { stompHandler } from '../socket.js';
 
 
 const headerTemplate = (isLogged, activePage, onLogout) => {
@@ -100,7 +101,8 @@ export function updateUserNav(context, activePage) {
 
         logout();
 
-        context.updateUserNav(context);
-        context.page.redirect('/home');
+        stompHandler.closeSocketConnection(() => {
+            context.page.redirect('/home');
+        });
     }
 }

@@ -1,6 +1,7 @@
 import { html } from '../util/lib.js';
 import { login } from '../api/data.js';
 import { showError } from '../util/show-message';
+import { stompHandler } from '../socket.js';
 
 
 const loginTemplate = onSubmit => html`
@@ -39,9 +40,10 @@ export function loginPage(context) {
 
         try {
             await login(email, password);
-
-            context.updateUserNav(context, 'messages');
-            context.page.redirect('/messages');
+            
+            stompHandler.connectToSocket(() => {
+                context.page.redirect('/messages');
+            });
         } catch (err) {
             showError('Authentication error', err.message);
         }

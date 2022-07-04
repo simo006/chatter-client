@@ -1,9 +1,10 @@
 import { html } from '../../util/lib.js';
 import { chatLabelTemplate } from './chat-label.js';
 import { chatInfoTemplate } from './chat-info.js';
-import { getChats, getChat, sendMessage } from '../../api/data.js';
+import { getChats, getChat, getUserChatRooms } from '../../api/data.js';
 import { showError } from '../../util/show-message.js';
-import { AuthenticationError} from '../../error/AuthenticationError.js';
+import { stompHandler } from '../../socket.js';
+import { AuthenticationError } from '../../error/AuthenticationError.js';
 
 
 const messagesTemplate = (chats, onChatClick, activeChat, isUserActive, onChatSend) => {
@@ -48,23 +49,27 @@ const messagesTemplate = (chats, onChatClick, activeChat, isUserActive, onChatSe
  * @param  {Context} context - useful functions passed by the router
  */
 export async function messagesPage(context) {
+    context.updateUserNav(context, 'messages');
+
     const chatId = Number(context.params['chatId']);
+    let activeChat, chats;
 
     try {
-        const chats = await getChats();
+        const userChatRooms = (await getUserChatRooms())['data'];
+        userChatRooms.forEach(r => stompHandler.subscribeToRoom(r, receivedChatHandler));
 
-        if (context.params && chatId > 0) {
-            const activeChat = await getChat(chatId);
+        chats = (await getChats())['data'];
 
-            context.render(messagesTemplate(chats['data'], onChatClick, activeChat['data'], false, onChatSend));
+        if (chatId > 0) {
+            activeChat = (await getChat(chatId))['data'];
+            context.render(messagesTemplate(chats, onChatClick, activeChat, false, onChatSend));
         } else {
-            context.render(messagesTemplate(chats['data'], onChatClick));
+            context.render(messagesTemplate(chats, onChatClick));
         }
-
-        context.updateUserNav(context, 'messages');
-    } catch(err) {
+    } catch (err) {
         if (err instanceof AuthenticationError) {
             context.page.redirect('/home');
+
             showError('Authentication error', err.message);
         } else {
             showError(err.error, err.message);
@@ -77,10 +82,11 @@ export async function messagesPage(context) {
             button = button.parentElement;
         }
 
-        Array.from(button.parentElement.children).forEach(e => e.classList.remove('active')); 
+        Array.from(button.parentElement.children).forEach(e => e.classList.remove('active'));
         button.classList.add('active');
 
-        context.page.redirect('/messages/' + button.dataset.chatId);
+        activeChat = (await getChat(button.dataset.chatId))['data'];
+        context.render(messagesTemplate(chats, onChatClick, activeChat, false, onChatSend));
     }
 
     async function onChatSend(event) {
@@ -92,11 +98,10 @@ export async function messagesPage(context) {
 
         if (message !== '') {
             try {
-                await sendMessage(chatId, message);
+                stompHandler.sendMessageToChatRoom(chatId, message);
+
                 form.reset();
-            
-                context.page.redirect('/messages/' + chatId);
-            } catch(err) {
+            } catch (err) {
                 if (err instanceof AuthenticationError) {
                     form.reset();
                     context.page.redirect('/home');
@@ -107,5 +112,12 @@ export async function messagesPage(context) {
                 }
             }
         }
+    }
+
+    async function receivedChatHandler(messageOutput) {
+        const message = JSON.parse(messageOutput.body);
+        activeChat['messages'].unshift(message);
+
+        context.render(messagesTemplate(chats, onChatClick, activeChat, false, onChatSend));
     }
 }

@@ -10,7 +10,7 @@ export const chatInfoTemplate = ({ id, members, name, messages }, active, onChat
             <span class="ms-2 badge rounded-pill ${active ? 'bg-success' : 'bg-secondary'}">${active ? 'Online' : 'Offline'}</span>
         </h3>
         <div class="border-top py-2 message-holder">
-            ${messages.reverse().map(m => messageBubbleTemplate(m))}
+            ${messages.map(m => messageBubbleTemplate(m))}
         </div>
     </div>
     <div class="card-footer">

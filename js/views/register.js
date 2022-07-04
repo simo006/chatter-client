@@ -1,6 +1,7 @@
 import { html } from '../util/lib.js';
 import { register } from '../api/data.js';
 import { showError } from '../util/show-message.js';
+import { stompHandler } from '../socket.js';
 
 
 const registerTemplate = onSubmit => html`
@@ -69,8 +70,9 @@ export function registerPage(context) {
         try {
             await register(email, password, confirmPassword, firstName, lastName, age);
 
-            context.updateUserNav(context, 'messages');
-            context.page.redirect('/messages');
+            stompHandler.connectToSocket(() => {
+                context.page.redirect('/messages');
+            });
         } catch (err) {
             showError('Registration error', err.message);
         }
