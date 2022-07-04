@@ -11,12 +11,12 @@
         border-radius: $container-radius;
         background-color: $message-bubble-background;
         box-shadow: $box-shadow-container-sm;
-        align-self: flex-end;
+        align-self: flex-start;
         flex-shrink: 0;
     
         &.my-bubble {
             background-color: $my-message-bubble-background;
-            align-self: flex-start;
+            align-self: flex-end;
         }
     }
 }
