@@ -1,0 +1,15 @@
+.message-list {
+
+    .list-group-item:not(.seen):not(.active) {
+        background-color: $my-message-bubble-background;
+        font-weight: bold;
+    }
+
+    .dot-online {
+        height: 10px;
+        width: 10px;
+        background-color: #198754;
+        border-radius: 50%;
+        display: inline-block;
+    }
+}

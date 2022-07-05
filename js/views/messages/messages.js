@@ -5,12 +5,13 @@ import { getChats, getChat, getUserChatRooms } from '../../api/data.js';
 import { showError } from '../../util/show-message.js';
 import { stompHandler } from '../../socket.js';
 import { AuthenticationError } from '../../error/AuthenticationError.js';
+import { getUserData, removeUserData } from '../../util/storage.js';
 
 
-const messagesTemplate = (chats, onChatClick, activeChat, isUserActive, onChatSend) => {
+const messagesTemplate = (chats, onChatClick, activeChat, onChatSend) => {
     let chatLabels = '';
-    if (chats.length > 0) {
-        chatLabels = chats.map(c => chatLabelTemplate(c, onChatClick, activeChat ? activeChat['id'] : undefined));
+    if (Object.keys(chats).length > 0) {
+        chatLabels = Object.values(chats).map(c => chatLabelTemplate(c, onChatClick, activeChat ? activeChat['id'] : undefined));
     }
 
     let chatInfoView = html`
@@ -19,7 +20,7 @@ const messagesTemplate = (chats, onChatClick, activeChat, isUserActive, onChatSe
     </div>`;
 
     if (activeChat) {
-        chatInfoView = chatInfoTemplate(activeChat, isUserActive, onChatSend);
+        chatInfoView = chatInfoTemplate(activeChat, onChatSend);
     }
 
     return html`
@@ -29,7 +30,7 @@ const messagesTemplate = (chats, onChatClick, activeChat, isUserActive, onChatSe
                 <div class="card border-0 floating-sidebar">
                     <div class="card-body">
                         <h2 class="h4 mb-3">Messages</h2>
-                        <div class="list-group">
+                        <div class="list-group message-list">
                             ${chatLabels}
                         </div>
                     </div>
@@ -44,30 +45,48 @@ const messagesTemplate = (chats, onChatClick, activeChat, isUserActive, onChatSe
     </section>`
 };
 
+let activeChat = {}, chats = {};
+
 /**
  * Events happening when the page is loading
  * @param  {Context} context - useful functions passed by the router
  */
 export async function messagesPage(context) {
     context.updateUserNav(context, 'messages');
-
     const chatId = Number(context.params['chatId']);
-    let activeChat, chats;
+
+    stompHandler.subscribeToRoom('/user/queue/status', updateUserStatusHandler);
+    stompHandler.sendStatusRefresh();
 
     try {
         const userChatRooms = (await getUserChatRooms())['data'];
         userChatRooms.forEach(r => stompHandler.subscribeToRoom(r, receivedChatHandler));
 
-        chats = (await getChats())['data'];
+        (await getChats())['data'].forEach(chat => {
+            let online;
+            if (chats.hasOwnProperty(chat['id'])) {
+                online = chats[chat['id']]['online'];
+            }
+
+            chats[chat['id']] = chat;
+            chats[chat['id']]['online'] = online;
+        });
 
         if (chatId > 0) {
-            activeChat = (await getChat(chatId))['data'];
-            context.render(messagesTemplate(chats, onChatClick, activeChat, false, onChatSend));
-        } else {
-            context.render(messagesTemplate(chats, onChatClick));
+            stompHandler.sendSeenChatNotification(chatId);
+
+            const newChat = (await getChat(chatId))['data'];
+            if (newChat['id'] === activeChat['id']) {
+                activeChat['messages'] = newChat['messages'];
+            } else {
+                activeChat = newChat;
+            }
         }
+
+        context.render(messagesTemplate(chats, onChatClick, activeChat, onChatSend));
     } catch (err) {
         if (err instanceof AuthenticationError) {
+            removeUserData();
             context.page.redirect('/home');
 
             showError('Authentication error', err.message);
@@ -82,19 +101,28 @@ export async function messagesPage(context) {
             button = button.parentElement;
         }
 
+        const chatId = button.dataset.chatId;
+
         Array.from(button.parentElement.children).forEach(e => e.classList.remove('active'));
         button.classList.add('active');
 
-        activeChat = (await getChat(button.dataset.chatId))['data'];
-        context.render(messagesTemplate(chats, onChatClick, activeChat, false, onChatSend));
+        if (!chats[chatId]['seen']) {
+            chats[chatId]['seen'] = true;
+            stompHandler.sendSeenChatNotification(chatId);
+        }
+
+        context.page.redirect(`/messages/${chatId}`);
     }
 
     async function onChatSend(event) {
         event.preventDefault();
 
+        stompHandler.sendStatusRefresh();
+
         const form = event.target;
         const formData = new FormData(form);
         const message = formData.get('message').trim();
+        const chatId = Number(context.params['chatId']);
 
         if (message !== '') {
             try {
@@ -103,7 +131,9 @@ export async function messagesPage(context) {
                 form.reset();
             } catch (err) {
                 if (err instanceof AuthenticationError) {
+                    removeUserData();
                     form.reset();
+
                     context.page.redirect('/home');
 
                     showError('Authentication error', err.message);
@@ -115,9 +145,66 @@ export async function messagesPage(context) {
     }
 
     async function receivedChatHandler(messageOutput) {
-        const message = JSON.parse(messageOutput.body);
-        activeChat['messages'].unshift(message);
+        if (messageOutput.body) {
+            const message = JSON.parse(messageOutput.body);
 
-        context.render(messagesTemplate(chats, onChatClick, activeChat, false, onChatSend));
+            if (message['sender'] && message['senderEmail']) {
+                const chatId = message['chatId'];
+
+                // the user is in the chat
+                if (activeChat && activeChat['id'] === chatId) {
+                    activeChat['messages'].unshift(message);
+
+                    stompHandler.sendSeenChatNotification(chatId);
+                } else {
+                    chats[chatId]['seen'] = false;
+                }
+
+                chats[chatId]['lastMessage'] = message['message'];
+                chats[chatId]['dateTimeSent'] = message['dateTimeSent'];
+                chats[chatId]['sender'] = message['sender'];
+                if (message['senderEmail'] === getUserData()['email']) {
+                    chats[chatId]['sender'] = 'You';
+                }
+            } else {
+                if (message['userEmail'] !== getUserData()['email']) {
+                    if (!chats[message['chatId']].hasOwnProperty('seenBy')) {
+                        chats[message['chatId']]['seenBy'] = [];
+                    }
+
+                    chats[message['chatId']]['seenBy'].push(message['names']);
+                }
+            }
+        }
+
+        context.render(messagesTemplate(chats, onChatClick, activeChat, onChatSend));
+    }
+
+    async function updateUserStatusHandler(messageOutput) {
+        if (messageOutput.body) {
+            const message = JSON.parse(messageOutput.body).payload;
+            const chatId = Number(context.params['chatId']);
+
+            if (!message['sendTo']) {
+                stompHandler.sendStatusUpdate('ONLINE', message['senderEmail']);
+            }
+
+            if (context.page.current.startsWith('/messages')) {
+                for (const chatId in chats) {
+                    if (chats[chatId]['email'] === message['senderEmail']) {
+                        chats[chatId]['online'] = true;
+                        break;
+                    }
+                }
+
+                if (chatId > 0) {
+                    if (activeChat && activeChat['email'] === message['senderEmail']) {
+                        activeChat['online'] = true;
+                    }
+                }
+
+                context.render(messagesTemplate(chats, onChatClick, activeChat, onChatSend));
+            }
+        }
     }
 }

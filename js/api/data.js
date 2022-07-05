@@ -5,7 +5,6 @@ const endPoints = {
     chats: '/chats',
     chat: id => '/chats/' + id,
     sendMessage: id => '/chats/' + id,
-    userRooms: '/auth/user-rooms',
     userChatRooms: '/auth/user-chat-rooms'
 };
 
@@ -23,10 +22,6 @@ export async function getChat(id) {
 
 export async function sendMessage(chatId, message) {
     return await api.post(endPoints.sendMessage(chatId), { message });
-}
-
-export async function getUserRooms() {
-    return await api.get(endPoints.userRooms);
 }
 
 export async function getUserChatRooms() {

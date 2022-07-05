@@ -1,3 +1,4 @@
+import { stompHandler } from '../socket.js';
 import { html } from '../util/lib.js';
 
 
@@ -13,4 +14,6 @@ const aboutTemplate = () => html`
 export function aboutPage(context) {
     context.render(aboutTemplate());
     context.updateUserNav(context, 'about');
+
+    stompHandler.sendStatusRefresh();
 }
